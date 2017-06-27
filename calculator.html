@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>使用vuex来写一个简易计算器的demo</title>
+    <script src="js/vue.js"></script>
+    <script src="js/vuex.js"></script>
+   <style>
+        #app{width:200px;margin:200px;}
+        .keys .list{width:100%;display:flex;justify-content: space-between;flex-wrap:wrap;border-top:1px solid #ccc;border-left: 1px solid #ccc;border-bottom: 1px solid #ccc;}
+        .keys .list div{width:49px;height:50px;border: 1px solid #ccc;border-top:none;border-left:none;background: #efefef;display: flex;justify-content: center;align-items: center;font-size: 18px;cursor: pointer;}
+        .keys .list div:first-child{
+            color:rgb(254,69,0);
+        }
+        .keys .list div:last-child{
+            background-color: rgb(254,69,0);
+            color:#fff;
+        }
+        .result,.enter{
+            height:30px;
+            line-height: 30px;
+            padding-right: 10px;
+            text-align: right;
+            background: #ddd;
+        }
+    </style>
+</head>
+<body>
+<p>一个简易计算器的demo，练习使用vuex</p>
+ <p>思路：</p>
+    <ol>
+        <li>计算结果result和输入的值enter，可以看做是应用层的状态（全局数据）处理，和每个组件都有关联，这里使用vuex的仓库store</li>
+        <li>每个按键都可以看做一个组件，这里可以使用自定义组件通过传值来完成不同的按键显示，使用props参数</li>
+        <li>使用v-for来循环输出按键，点击每个按键触发一个方法，来获取点击的按键值</li>
+        <li>创建vue实例，让store和vue联系起来</li>
+    </ol>
+
+<div id="app">
+    <div class='result'>{{result}}</div>
+    <div class='enter'>{{enter===''?0:enter}}</div>
+    <div class="keys">
+        <div class="list">
+            <keyboard v-for='item in keys' :value='item'></keyboard>
+        </div>
+    </div>
+
+
+</div>
+
+<script>
+// 创建仓库
+const store = new Vuex.Store({
+    state:{
+        result:'', //计算结果
+        enter:''   //输入的值
+    },
+    mutations:{
+        // 定义为calculate的mutation
+        calculate(state,value){
+            if(value==='='){
+                // 输入=时，说明要计算结果
+                state.result=eval(state.enter);
+                state.enter+=value;
+            }else if(value==='clear'){
+                // 键入clear时，说明要清空
+                state.result = state.enter = '';
+            }else{
+                // 输入其他值时，输入值拼接
+                state.enter+=value;
+            }
+        }
+    }
+});
+// 自定义组件keyboard
+Vue.component('keyboard',{
+    props:['value'],
+    template:`<div @click="getKeyboardValue" :data-value='value'>{{value}}</div>`,
+    methods:{
+        // 点击按键事件 es6写法
+        getKeyboardValue(event){
+            //获取按键值
+            let value = event.target.dataset.value;
+            // 通过store的mutation来修改state的里面的状态
+            this.$store.commit('calculate',value);
+
+        }
+    }
+
+});
+
+// 创建vue实例
+ const app=new Vue({
+    el:"#app",
+    store, //es6写法，相当于store:store,
+    computed:{
+        // 计算结果
+        result(){
+            return this.$store.state.result;
+        },
+        enter:function(){
+            return this.$store.state.enter;
+        }
+
+    },
+    data:{
+        keys:[
+            'clear','+','-','*',
+            '9','8','7','/',
+            '6','5','4','3',
+            '2','1','0','='
+        ]
+    }
+ })
+</script>
+
+</body>
+</html>
